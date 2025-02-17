@@ -23,18 +23,27 @@ async def read_temperatures_by_city(city_id: int, db: AsyncSession = asyncSessio
     return temperatures
 
 
-@router.post("/temperatures/update/")
+@router.post("/temperatures/update/", response_model=dict)
 async def update_temperatures(db: AsyncSession = asyncSession):
     cities = await city_crud.get_all_cities(db=db)
     if not cities:
         raise HTTPException(status_code=404, detail="No cities found")
 
+    updated_cities = []
+    failed_cities = []
+
     for city in cities:
         try:
             temperature = await crud.fetch_temperature_by_city(city.name)
             await crud.create_update_temperature(db=db, city_id=city.id, temperature=temperature)
+            updated_cities.append(city.name)
         except HTTPException as e:
-            print(f"Failed to update temperature for {city.name}: {e.detail}")
+            failed_cities.append((city.name, e.detail))
         except Exception as e:
-            print(f"Unexpected error for {city.name}: {str(e)}")
+            failed_cities.append((city.name, str(e)))
 
+    return {
+        "message": "Temperature update completed",
+        "updated_cities": updated_cities,
+        "failed_cities": failed_cities
+    }

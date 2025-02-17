@@ -15,9 +15,9 @@ async def fetch_temperature_by_city(city_name: str) -> str:
 
     try:
         async with httpx.AsyncClient() as client:
-            responce = await client.get(url)
-            responce.raise_for_status()
-            temperature = responce.text.strip()
+            response = await client.get(url)
+            response.raise_for_status()
+            temperature = response.text.strip()
             return str(temperature)
     except httpx.HTTPStatusError as e:
         raise HTTPException(
